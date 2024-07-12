@@ -1,0 +1,6 @@
+terraform.tfstate*
+.vscode
+pki
+sample.ovpn
+.terraform
+vpn-manager-lambda.tf.bak

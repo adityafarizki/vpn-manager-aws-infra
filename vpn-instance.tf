@@ -1,7 +1,7 @@
 resource "aws_instance" "vpn_instance" {
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t3.nano"
-  subnet_id                   = module.vpc.public_subnets[0]
+  instance_type               = var.vpn_instance_type
+  subnet_id                   = var.vpn_instance_subnet_id
   associate_public_ip_address = true
 
   iam_instance_profile   = aws_iam_instance_profile.vpn_instance_profile.name
@@ -35,9 +35,9 @@ locals {
   vpn_instance_user_data = templatefile(
     "${path.module}/assets/openvpn-install.sh.tftpl",
     {
-      vpn_subnet_address = "10.8.0.0",
-      vpn_subnet_mask    = "255.255.255.0"
-      vpn_subnet_cidr    = "/24"
+      vpn_subnet_address = var.vpn_ip_config.vpn_subnet_address
+      vpn_subnet_mask    = var.vpn_ip_config.vpn_subnet_mask
+      vpn_subnet_cidr    = var.vpn_ip_config.vpn_subnet_cidr
       vpn_data_s3_bucket = aws_s3_bucket.cert_storage.id
       vpn_port           = "1194"
     }
@@ -54,7 +54,7 @@ resource "aws_eip_association" "vpn_eip_assoc" {
 resource "aws_security_group" "vpn_instance" {
   name        = "VpnInstanceGroup"
   description = "Allow access to vpn port and allow access to aws services"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 1194

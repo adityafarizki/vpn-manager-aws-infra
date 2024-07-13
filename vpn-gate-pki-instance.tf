@@ -1,7 +1,7 @@
 resource "aws_instance" "vpn_gate_pki_instance" {
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t3.nano"
-  subnet_id                   = module.vpc.public_subnets[0]
+  instance_type               = var.vpn_management_instance_type
+  subnet_id                   = var.vpn_management_instance_subnet_id
   associate_public_ip_address = true
 
   iam_instance_profile   = aws_iam_instance_profile.vpn_gate_pki_instance_profile.name
@@ -41,19 +41,19 @@ locals {
       aws_region       = local.current_region
       env_variables = {
         AWS_REGION        = local.current_region
-        OIDC_CLIENT_ID    = "23b3d855-cc27-4610-8290-653b02159435"
-        OIDC_PROVIDER     = "AzureAD"
-        OIDC_AUTH_URL     = "https://login.microsoftonline.com/05aa76a4-379b-48c6-ad59-687eef780011/oauth2/v2.0/authorize"
-        OIDC_TOKEN_URL    = "https://login.microsoftonline.com/05aa76a4-379b-48c6-ad59-687eef780011/oauth2/v2.0/token"
-        OIDC_CERT_URL     = "https://login.microsoftonline.com/05aa76a4-379b-48c6-ad59-687eef780011/discovery/v2.0/keys"
-        OIDC_SCOPES       = "api://23b3d855-cc27-4610-8290-653b02159435/email"
+        OIDC_CLIENT_ID    = var.vpn_management_config.oidc_client_id
+        OIDC_PROVIDER     = var.vpn_management_config.oidc_provider
+        OIDC_AUTH_URL     = var.vpn_management_config.oidc_auth_url
+        OIDC_TOKEN_URL    = var.vpn_management_config.oidc_token_url
+        OIDC_CERT_URL     = var.vpn_management_config.oidc_cert_url
+        OIDC_SCOPES       = var.vpn_management_config.oidc_scopes
+        OIDC_REDIRECT_URL = var.vpn_management_config.oidc_redirect_url
         STORAGE_BUCKET    = aws_s3_bucket.cert_storage.id
+        ADMIN_EMAIL_LIST  = var.vpn_management_config.admin_email_list
+        BASE_URL          = var.vpn_management_config.base_url
         CA_BASE_DIR       = "cav2"
         CONFIG_BASE_DIR   = "cav2"
         VPN_IP_ADDRESSES  = "main=${aws_eip.vpn_ip.public_ip}"
-        ADMIN_EMAIL_LIST  = "adityafarizki@live.com"
-        BASE_URL          = "https://vpn.faratas.net"
-        OIDC_REDIRECT_URL = "https://vpn.faratas.net/oidc-code-auth"
         PORT              = "8080"
         ADDRESS           = "0.0.0.0"
       }
@@ -68,7 +68,7 @@ locals {
 resource "aws_security_group" "vpn_gate_pki_instance" {
   name        = "VpnGatePkiInstanceGroup"
   description = "Allow access to http and https port and allow access to aws services"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 80
